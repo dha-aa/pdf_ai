@@ -111,7 +111,7 @@ PHYSIOLOGY
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # or gpt-4o-mini if you want
+            model="gpt-5-nano-2025-08-07",  # or gpt-4o-mini if you want
             messages=[
                 {"role": "system", "content": "You are a precise CSV data extractor. Output only valid CSV rows."},
                 {"role": "user", "content": prompt},
