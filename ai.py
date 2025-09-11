@@ -45,28 +45,47 @@ def extract_page_number(filename):
     return 1
 
 
+def chunk_text_by_pages(sorted_files, max_pages_per_chunk=8):
+    """Split exam into chunks of N pages each."""
+    chunks = []
+    current_chunk = []
+    for i, filename in enumerate(sorted_files, 1):
+        current_chunk.append(filename)
+        if len(current_chunk) >= max_pages_per_chunk or i == len(sorted_files):
+            chunks.append(current_chunk)
+            current_chunk = []
+    return chunks
+
+
 def process_exam(exam_prefix, sorted_files):
-    """Process all pages of one exam in a single LLM request."""
-    combined_text = ""
-    for filename in sorted_files:
-        page_number = extract_page_number(filename)
-        txt_path = os.path.join(txt_folder, filename)
-        try:
-            with open(txt_path, "r", encoding="utf-8") as f:
-                text = f.read()
-        except Exception as e:
-            print(f" Error reading {filename}: {e}")
+    """Process exam in chunks so large exams don’t exceed context window."""
+    all_csv_rows = []
+
+    # 🔹 Split exam pages into manageable chunks
+    file_chunks = chunk_text_by_pages(sorted_files, max_pages_per_chunk=8)
+
+    for chunk_idx, file_chunk in enumerate(file_chunks, 1):
+        combined_text = ""
+        for filename in file_chunk:
+            page_number = extract_page_number(filename)
+            txt_path = os.path.join(txt_folder, filename)
+            try:
+                with open(txt_path, "r", encoding="utf-8") as f:
+                    text = f.read()
+            except Exception as e:
+                print(f" Error reading {filename}: {e}")
+                continue
+
+            if not text.strip():
+                continue
+
+            combined_text += f"--- Page {page_number} ---\n{text}\n\n"
+
+        if not combined_text.strip():
             continue
 
-        if not text.strip():
-            continue
-
-        combined_text += f"--- Page {page_number} ---\n{text}\n\n"
-
-    if not combined_text.strip():
-        return ""
-
-    prompt = f"""You are a CSV data extractor for medical exam papers. 
+        # 🔹 Your detailed prompt with sample input/output
+        prompt = f"""You are a CSV data extractor for medical exam papers. 
 Convert the following MULTI-PAGE exam text into CSV format.
 
 ### OUTPUT FORMAT ###
@@ -103,27 +122,31 @@ PHYSIOLOGY
 "Pain pathway",5,"M.S. DEGREE EXAMINATION, March 1990 – General Surgery – Applied Basic Sciences","{exam_prefix}.pdf",2,1990
 "Cardiac cycle",5,"M.S. DEGREE EXAMINATION, March 1990 – General Surgery – Applied Basic Sciences","{exam_prefix}.pdf",2,1990
 
-### TEXT TO CONVERT ###
+### TEXT TO CONVERT (chunk {chunk_idx}) ###
 {combined_text}
 
 ### CSV OUTPUT ###
 """
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-5-nano-2025-08-07",  # or gpt-4o-mini if you want
-            messages=[
-                {"role": "system", "content": "You are a precise CSV data extractor. Output only valid CSV rows."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.1,
-            max_tokens=4000,
-        )
-        return response.choices[0].message.content.strip() # type: ignore
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",  # or gpt-4o-mini if available
+                messages=[
+                    {"role": "system", "content": "You are a precise CSV data extractor. Output only valid CSV rows."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.1,
+                max_tokens=3000,
+            )
+            chunk_csv = response.choices[0].message.content.strip()  # type: ignore
+            if chunk_csv:
+                all_csv_rows.append(chunk_csv)
+                print(f" ✅ Processed chunk {chunk_idx}/{len(file_chunks)} for {exam_prefix}")
+        except Exception as e:
+            print(f" API Error for {exam_prefix}, chunk {chunk_idx}: {e}")
+            continue
 
-    except Exception as e:
-        print(f" API Error for {exam_prefix}: {e}")
-        return ""
+    return "\n".join(all_csv_rows)
 
 
 def save_individual_csv(exam_prefix, csv_output):
