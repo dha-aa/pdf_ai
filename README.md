@@ -173,5 +173,5 @@ tqdm
 ✅ That’s it! Place PDFs → Run `main.py` → Get clean CSV exam datasets.
 
 ---
-Watch this:-
-[![Watch the video](https://img.youtube.com/vi/px1lLqGNeGA/maxresdefault.jpg)](https://youtu.be/px1lLqGNeGA)
+▶️ [Watch the demo on YouTube](https://youtu.be/px1lLqGNeGA)
+
