@@ -90,6 +90,9 @@ OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxx
 
 ### Step 1: Place PDFs
 
+```
+mkdir pdfs
+```
 Put all your exam PDFs inside the **`pdfs/`** folder.
 
 Example:
