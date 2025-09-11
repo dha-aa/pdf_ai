@@ -141,7 +141,7 @@ PHYSIOLOGY
             chunk_csv = response.choices[0].message.content.strip()  # type: ignore
             if chunk_csv:
                 all_csv_rows.append(chunk_csv)
-                print(f" ✅ Processed chunk {chunk_idx}/{len(file_chunks)} for {exam_prefix}")
+                print(f"Processed chunk {chunk_idx}/{len(file_chunks)} for {exam_prefix}")
         except Exception as e:
             print(f" API Error for {exam_prefix}, chunk {chunk_idx}: {e}")
             continue
