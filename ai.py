@@ -119,7 +119,7 @@ PHYSIOLOGY
             temperature=0.1,
             max_tokens=4000,
         )
-        return response.choices[0].message.content.strip()
+        return response.choices[0].message.content.strip() # type: ignore
 
     except Exception as e:
         print(f" API Error for {exam_prefix}: {e}")
