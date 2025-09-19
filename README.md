@@ -175,3 +175,5 @@ tqdm
 ---
 ▶️ [Watch the demo on YouTube](https://youtu.be/px1lLqGNeGA)
 
+▶️ [Watch full video how i build this ](https://youtu.be/fXd9SAqNRoM)
+
